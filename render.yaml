@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: repoready-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: CLIENT_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: STORAGE_DRIVER
+        value: local
+      - key: MAX_UPLOAD_MB
+        value: 350

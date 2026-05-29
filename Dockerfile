@@ -1,7 +1,8 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml .npmrc ./
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN npm install -g pnpm@10.24.0
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN pnpm install --frozen-lockfile --prod
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
