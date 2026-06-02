@@ -146,7 +146,7 @@ function CriticalFirst({ issues, onCopy }) {
         <ShieldAlert className="h-6 w-6 text-rose-200" />
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
-        {(issues.length ? issues : fallbackCritical()).slice(0, 3).map((issue) => (
+        {issues.length ? issues.slice(0, 3).map((issue) => (
           <button
             key={issueKey(issue)}
             onClick={() => onCopy(simpleFix(issue))}
@@ -156,7 +156,13 @@ function CriticalFirst({ issues, onCopy }) {
             <p className="mt-3 text-sm font-black text-white">{studentMistake(issue)}</p>
             <p className="mt-2 text-xs leading-5 text-slate-400">{issue.file}</p>
           </button>
-        ))}
+        )) : (
+          <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 md:col-span-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-200" />
+            <p className="mt-3 text-sm font-black text-white">No critical issues detected.</p>
+            <p className="mt-2 text-xs leading-5 text-slate-300">RepoReady did not find exposed secrets, uploaded `.env` files, or hardcoded localhost URLs in this scan.</p>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -360,6 +366,7 @@ function issueKey(issue) {
 
 function studentMistake(issue) {
   const text = issue.problem.toLowerCase();
+  if (text.includes('.env.example') || text.includes('environment variable template')) return 'Your project is missing a safe .env.example file.';
   if (text.includes('secret') || text.includes('api key')) return 'Your API key may be exposed in the project files.';
   if (text.includes('.env')) return 'Your .env file is included in the project.';
   if (text.includes('localhost')) return 'Your app still uses localhost in code.';
@@ -386,9 +393,9 @@ function studentWhy(issue) {
 
 function simpleFix(issue) {
   const text = `${issue.problem} ${issue.fix} ${issue.file}`.toLowerCase();
+  if (text.includes('.env.example')) return 'Create .env.example with variable names only, like API_KEY=replace_me.';
   if (text.includes('secret') || text.includes('api key')) return 'Move the API call to the backend. Read the key from process.env and never expose it in React.';
   if (text.includes('.env') && !text.includes('example')) return 'Remove .env from git, add it to .gitignore, and create a safe .env.example file.';
-  if (text.includes('.env.example')) return 'Create .env.example with variable names only, like GROQ_API_KEY=replace_me.';
   if (text.includes('localhost')) return 'Replace localhost URLs with environment variables such as VITE_API_URL or API_BASE_URL.';
   if (text.includes('start script')) return 'Add a start script in package.json that runs your production server.';
   if (text.includes('build script')) return 'Add a build script in package.json, for example npm run build.';
@@ -396,14 +403,6 @@ function simpleFix(issue) {
   if (text.includes('screenshot')) return 'Add screenshots of the main screens and link them in README.md.';
   if (text.includes('large')) return 'Move repeated UI, API calls, and helper logic into smaller components or utility files.';
   return issue.fix;
-}
-
-function fallbackCritical() {
-  return [
-    { severity: 'Critical', category: 'Security', file: 'frontend/src/api/groq.js', problem: 'API key found in frontend code.', why: '', fix: '' },
-    { severity: 'Critical', category: 'Security', file: '.env', problem: '.env file uploaded.', why: '', fix: '' },
-    { severity: 'Critical', category: 'Deployment', file: 'src/config.js', problem: 'localhost URL in production code.', why: '', fix: '' },
-  ];
 }
 
 function buildFixList(audit, issues, checklist) {

@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { generateGeminiText, isGeminiConfigured } from '../services/gemini.js';
+import { generateGroqText, isGroqConfigured } from '../services/groq.js';
 
 const router = Router();
 
 router.get('/status', (_req, res) => {
   res.json({
-    provider: 'gemini',
-    configured: isGeminiConfigured(),
-    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    provider: 'groq',
+    configured: isGroqConfigured(),
+    model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
   });
 });
 
@@ -17,7 +17,7 @@ router.post('/generate', async (req, res, next) => {
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'prompt is required' });
     }
-    const text = await generateGeminiText(prompt, {
+    const text = await generateGroqText(prompt, {
       temperature: req.body.temperature,
       maxOutputTokens: req.body.maxOutputTokens,
     });

@@ -1,13 +1,13 @@
-import { generateJsonWithGemini, isGeminiConfigured } from './gemini.js';
+import { generateJsonWithGroq, isGroqConfigured } from './groq.js';
 
 export async function inferProjectProfile({ scan, fallbackName, projectType }) {
   const signals = scan?.repoSignals || {};
   const fallback = buildFallbackProfile({ signals, fallbackName, projectType });
 
-  if (!isGeminiConfigured() || !scan) return fallback;
+  if (!isGroqConfigured() || !scan) return fallback;
 
   try {
-    const profile = await generateJsonWithGemini(`Infer what this uploaded repository actually does from repo evidence.
+    const profile = await generateJsonWithGroq(`Infer what this uploaded repository actually does from repo evidence.
 
 Return a concise JSON projectProfile with this exact shape:
 {
@@ -45,13 +45,13 @@ Rules:
 
 Signals:
 ${JSON.stringify(summarizeSignals(signals), null, 2)}`, fallback);
-    return { ...normalizeProfile(profile, fallback), inferenceSource: 'gemini' };
+    return { ...normalizeProfile(profile, fallback), inferenceSource: 'groq' };
   } catch (error) {
     return {
       ...fallback,
       inferenceSource: 'rules',
-      aiStatus: `Gemini unavailable: ${error.message}`,
-      evidence: [...fallback.evidence, `Gemini unavailable: ${error.message}`],
+      aiStatus: `Groq unavailable: ${error.message}`,
+      evidence: [...fallback.evidence, `Groq unavailable: ${error.message}`],
     };
   }
 }

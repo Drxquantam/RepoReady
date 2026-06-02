@@ -8,7 +8,7 @@ export default function Settings() {
     theme: 'Dark',
     exportFormat: 'PDF',
     projectType: 'MERN',
-    provider: 'OpenAI',
+    provider: 'Groq',
     ...getSettings(),
   }));
   const [saved, setSaved] = useState(false);
@@ -40,15 +40,15 @@ export default function Settings() {
             <select value={settings.projectType} onChange={(event) => update('projectType', event.target.value)} className="input"><option>MERN</option><option>React</option><option>Node/Express</option><option>Python/Flask</option><option>Next.js</option><option>Other</option></select>
           </Field>
           <Field label="AI provider placeholder">
-            <select value={settings.provider} onChange={(event) => update('provider', event.target.value)} className="input"><option>Gemini</option><option>Groq</option><option>OpenAI</option></select>
+            <select value={settings.provider} onChange={(event) => update('provider', event.target.value)} className="input"><option>Groq</option><option>OpenAI</option></select>
           </Field>
         </div>
         <div className="mt-5">
           <Field label="API key">
-            <input disabled className="input opacity-60" value={aiStatus?.configured ? 'Gemini connected on backend' : 'Add GEMINI_API_KEY in server .env'} readOnly />
+            <input disabled className="input opacity-60" value={aiStatus?.configured ? 'Groq connected on backend' : 'Add GROQ_API_KEY in server .env'} readOnly />
           </Field>
           <p className="mt-2 text-sm text-slate-500">
-            Gemini runs server-side with model {aiStatus?.model || 'gemini-2.5-flash'}. API keys stay disabled in the browser.
+            Groq runs server-side with model {aiStatus?.model || 'llama-3.3-70b-versatile'}. API keys stay disabled in the browser.
           </p>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">

@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { generateJsonWithGemini, isGeminiConfigured } from './gemini.js';
+import { generateJsonWithGroq, isGroqConfigured } from './groq.js';
 import { buildIssuesFromScan } from './projectScanner.js';
 
 const colors = {
@@ -125,11 +125,11 @@ export async function generateAiResumePack(audit, options = {}) {
   const profile = normalizedProfile(audit);
   if (!hasUsableProfile(profile)) return needsProfilePack(profile);
   const style = normalizeBulletStyle(options.style);
-  if (!isGeminiConfigured()) return generateResumePack(audit, { style });
+  if (!isGroqConfigured()) return generateResumePack(audit, { style });
 
   const fallback = generateResumePack(audit, { style });
   try {
-    const generated = await generateJsonWithGemini(`Generate a detailed, project-specific placement resume pack using only this detected project profile.
+    const generated = await generateJsonWithGroq(`Generate a detailed, project-specific placement resume pack using only this detected project profile.
 
 Detected project profile:
 ${JSON.stringify(profile, null, 2)}
@@ -142,7 +142,7 @@ JSON shape:
   "bullets": ["4 to 5 resume bullets"],
   "pitch": "30 second project pitch",
   "questions": [["question", "detailed answer"], ["8 total question-answer pairs"]],
-  "source": "gemini",
+  "source": "groq",
   "style": "${style}",
   "confidence": ${profile.confidence}
 }
@@ -165,7 +165,7 @@ Rules:
     return {
       ...fallback,
       source: 'profile',
-      aiStatus: `Gemini unavailable: ${error.message}`,
+      aiStatus: `Groq unavailable: ${error.message}`,
     };
   }
 }

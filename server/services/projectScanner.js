@@ -297,7 +297,7 @@ export function buildIssuesFromScan(scan) {
     );
   }
 
-  if (!scan.envExamples.length) {
+  if (!scan.envExamples.length && needsEnvExample(scan)) {
     add(
       'High',
       'Docs',
@@ -319,7 +319,7 @@ export function buildIssuesFromScan(scan) {
     );
   }
 
-  if (!scan.hasStartScript) {
+  if (!scan.hasStartScript && needsRuntimeStartScript(scan)) {
     add(
       'High',
       'Deployment',
@@ -409,6 +409,24 @@ export function buildIssuesFromScan(scan) {
   }
 
   return issues;
+}
+
+function needsEnvExample(scan) {
+  return Boolean(
+    scan.envFiles.length
+    || scan.secretHits.length
+    || scan.repoSignals?.envVariables?.length
+  );
+}
+
+function needsRuntimeStartScript(scan) {
+  const deps = new Set(
+    scan.packageFiles.flatMap((pkg) => [...(pkg.dependencies || []), ...(pkg.devDependencies || [])])
+      .map((item) => item.toLowerCase()),
+  );
+  const frameworks = new Set((scan.repoSignals?.frameworks || []).map((item) => item.toLowerCase()));
+  if (deps.has('express') || deps.has('fastify') || deps.has('koa') || frameworks.has('next.js')) return true;
+  return scan.repoSignals?.apiEndpoints?.some((endpoint) => /^\/api\b/i.test(endpoint)) && !scan.hasBuildScript;
 }
 
 function parsePackageFiles(textFiles) {
