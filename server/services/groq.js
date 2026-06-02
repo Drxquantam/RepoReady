@@ -12,6 +12,7 @@ export async function generateGroqText(prompt, options = {}) {
   const model = options.model || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
   const response = await fetch(GROQ_ENDPOINT, {
     method: 'POST',
+    signal: AbortSignal.timeout(options.timeoutMs ?? 12_000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,

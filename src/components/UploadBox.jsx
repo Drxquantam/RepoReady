@@ -9,7 +9,10 @@ export default function UploadBox({ onFileSelect, fileName }) {
       </div>
       <p className="mt-5 text-xl font-black text-white">Drop your project ZIP here</p>
       <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
-        {fileName || 'Attach a ZIP with README, package files, source folders, routes, and components. Exclude node_modules, .git, dist, and build folders for faster scans.'}
+        {fileName || 'Attach a clean ZIP with README, package files, and source folders only. Do not include node_modules, .git, dist, build, .next, images/videos, or dependency caches.'}
+      </p>
+      <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-200/80">
+        Smaller ZIP = faster audit
       </p>
     </label>
   );

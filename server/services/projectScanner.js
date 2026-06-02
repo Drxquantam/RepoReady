@@ -1,7 +1,12 @@
 import AdmZip from 'adm-zip';
 
 const TEXT_FILE_PATTERN = /\.(js|jsx|ts|tsx|json|md|txt|env|example|yml|yaml|html|css|scss|py|java|go|rb|php|toml|xml|gradle|properties)$/i;
-const IGNORED_PATHS = /(^|\/)(node_modules|dist|build|\.git|coverage|\.next|venv|__pycache__)\//i;
+const IGNORED_PATHS = /(^|\/)(node_modules|dist|build|\.git|coverage|\.next|venv|__pycache__|vendor|target|out|\.pnpm-store)\//i;
+const MAX_FILES_TO_SCAN = 900;
+const MAX_TEXT_FILES_TO_READ = 180;
+const MAX_TEXT_FILE_BYTES = 180_000;
+const PRIORITY_FILE_PATTERN = /(^|\/)(readme\.md|package\.json|vite\.config\.[jt]s|next\.config\.[jt]s|tsconfig\.json|requirements\.txt|pyproject\.toml|pom\.xml|build\.gradle|dockerfile|docker-compose\.ya?ml|\.env\.example|public\/index\.html)$/i;
+const PRIORITY_FOLDER_PATTERN = /(^|\/)(src|app|pages|components|routes|controllers|server|api|docs|public)\//i;
 const SECRET_PATTERNS = [
   /AIza[0-9A-Za-z\-_]{20,}/,
   /sk-[A-Za-z0-9_\-]{20,}/,
@@ -20,10 +25,14 @@ export function scanProjectZip(buffer) {
       path: normalize(entry.entryName),
       size: entry.header.size,
       entry,
-    }));
+    }))
+    .sort((a, b) => scanPriority(b.path) - scanPriority(a.path) || a.size - b.size)
+    .slice(0, MAX_FILES_TO_SCAN);
 
   const textFiles = files
-    .filter((file) => file.size <= 350_000 && isTextFile(file.path))
+    .filter((file) => file.size <= MAX_TEXT_FILE_BYTES && isTextFile(file.path))
+    .sort((a, b) => scanPriority(b.path) - scanPriority(a.path) || a.size - b.size)
+    .slice(0, MAX_TEXT_FILES_TO_READ)
     .map((file) => ({ ...file, content: file.entry.getData().toString('utf8') }));
 
   const packageFiles = parsePackageFiles(textFiles);
@@ -58,7 +67,21 @@ export function scanProjectZip(buffer) {
     hasStartScript: packageFiles.some((pkg) => Boolean(pkg.scripts?.start)),
     hasBuildScript: packageFiles.some((pkg) => Boolean(pkg.scripts?.build)),
     hasDevScript: packageFiles.some((pkg) => Boolean(pkg.scripts?.dev)),
+    scanLimits: {
+      totalZipEntries: entries.length,
+      scannedFiles: files.length,
+      scannedTextFiles: textFiles.length,
+      maxFiles: MAX_FILES_TO_SCAN,
+      maxTextFiles: MAX_TEXT_FILES_TO_READ,
+    },
   };
+}
+
+function scanPriority(path) {
+  if (PRIORITY_FILE_PATTERN.test(path)) return 3;
+  if (PRIORITY_FOLDER_PATTERN.test(path) && /\.(js|jsx|ts|tsx|py|html|css|md|json)$/i.test(path)) return 2;
+  if (isTextFile(path)) return 1;
+  return 0;
 }
 
 function extractRepoSignals(textFiles, packageFiles, readme) {

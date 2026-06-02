@@ -4,6 +4,7 @@ import PageShell from '../components/PageShell.jsx';
 import UploadBox from '../components/UploadBox.jsx';
 import { createAudit, saveAudit } from '../data/auditEngine.js';
 import { createServerAudit } from '../lib/api.js';
+import { estimateAuditTime, formatFileSize } from '../utils/auditEstimate.js';
 
 const checks = [
   ['secrets', 'Check secrets'],
@@ -55,6 +56,8 @@ export default function NewAudit() {
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const updateCheck = (key) => setForm((current) => ({ ...current, checks: { ...current.checks, [key]: !current.checks[key] } }));
+  const estimatedTime = form.file ? estimateAuditTime(form.file.size) : '';
+  const selectedSize = form.file ? formatFileSize(form.file.size) : '';
   const selectFile = (file) => {
     const cleanName = file?.name?.replace(/\.zip$/i, '').replace(/[-_]/g, ' ') || '';
     setForm((current) => ({ ...current, file, fileName: file?.name || '', projectName: current.projectName || cleanName }));
@@ -67,6 +70,18 @@ export default function NewAudit() {
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <section className="glass-card rounded-2xl p-5">
           <UploadBox onFileSelect={selectFile} fileName={form.fileName ? `Selected: ${form.fileName}` : ''} />
+          {form.file && (
+            <div className="mt-4 grid gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4 text-sm sm:grid-cols-2">
+              <div>
+                <p className="font-black uppercase tracking-[0.16em] text-cyan-100">ZIP size</p>
+                <p className="mt-1 text-lg font-black text-white">{selectedSize}</p>
+              </div>
+              <div>
+                <p className="font-black uppercase tracking-[0.16em] text-cyan-100">Estimated audit time</p>
+                <p className="mt-1 text-lg font-black text-white">{estimatedTime}</p>
+              </div>
+            </div>
+          )}
           {error && (
             <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-sm font-bold leading-6 text-rose-100">
               {error}
@@ -120,6 +135,11 @@ export default function NewAudit() {
           >
             {loading ? 'Analyzing project...' : 'Run Audit'}
           </button>
+          {loading && estimatedTime && (
+            <p className="mt-3 text-center text-sm font-bold text-slate-400">
+              Estimated time for this ZIP: {estimatedTime}
+            </p>
+          )}
         </section>
       </div>
     </PageShell>
