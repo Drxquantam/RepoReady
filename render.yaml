@@ -12,6 +12,8 @@ services:
         value: 4000
       - key: CLIENT_URL
         sync: false
+      - key: CLIENT_URLS
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
